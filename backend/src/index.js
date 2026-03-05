@@ -2,42 +2,177 @@ const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const { v4: uuidv4 } = require('uuid');
-const jwt = require('jsonwebtoken');
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// 内存缓存
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5分钟
 
 // 中间件
 app.use(cors());
 app.use(express.json());
+
+// 缓存工具函数
+const getCache = (key) => {
+  const item = cache.get(key);
+  if (item && Date.now() - item.timestamp < CACHE_TTL) {
+    return item.data;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCache = (key, data) => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
+// 获取当前活跃赛季
+const getCurrentSeason = async () => {
+  const cached = getCache('currentSeason');
+  if (cached) return cached;
+  
+  const season = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { id: 'desc' }
+  });
+  
+  if (season) {
+    setCache('currentSeason', season);
+  }
+  return season;
+};
 
 // 健康检查
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ===== 管理员接口 =====
+
+// 批量生成 API Key（仅管理员）
+app.post('/admin/api-keys/generate', async (req, res) => {
+  try {
+    const { count = 100, adminSecret } = req.body;
+    
+    if (adminSecret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: 'Invalid admin secret' });
+    }
+
+    const keys = [];
+    for (let i = 0; i < count; i++) {
+      const key = `sk_inst_${uuidv4().replace(/-/g, '')}`;
+      await prisma.apiKey.create({ data: { key } });
+      keys.push(key);
+    }
+
+    res.json({ success: true, count: keys.length, keys });
+  } catch (error) {
+    console.error('Generate keys error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 获取未使用的 API Key 列表
+app.get('/admin/api-keys/unused', async (req, res) => {
+  try {
+    const { adminSecret } = req.query;
+    
+    if (adminSecret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: 'Invalid admin secret' });
+    }
+
+    const keys = await prisma.apiKey.findMany({
+      where: { used: false },
+      select: { key: true, createdAt: true }
+    });
+
+    res.json({ count: keys.length, keys });
+  } catch (error) {
+    console.error('Get unused keys error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 开启新赛季
+app.post('/admin/seasons/start', async (req, res) => {
+  try {
+    const { name, adminSecret } = req.body;
+    
+    if (adminSecret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: 'Invalid admin secret' });
+    }
+
+    // 结束当前赛季
+    await prisma.season.updateMany(
+      { where: { isActive: true }, data: { isActive: false, endedAt: new Date() } }
+    );
+
+    // 创建新赛季
+    const season = await prisma.season.create({
+      data: { name: name || `Season ${await prisma.season.count() + 1}` }
+    });
+
+    // 清空角色票数（新赛季重新计数）
+    await prisma.character.updateMany({
+      data: { votes: 0 }
+    });
+
+    // 清除缓存
+    cache.delete('currentSeason');
+    cache.delete('leaderboard');
+
+    res.json({ success: true, season });
+  } catch (error) {
+    console.error('Start season error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ===== Agent 注册/认证 =====
 
-// 注册 Agent
+// 注册 Agent（需要预生成的 API Key）
 app.post('/api/v1/agents/register', async (req, res) => {
   try {
-    const { username, bio, avatarUrl } = req.body;
+    const { username, bio, avatarUrl, apiKey: providedKey } = req.body;
     
     if (!username || username.length < 3) {
       return res.status(400).json({ error: 'Username must be at least 3 characters' });
     }
 
-    const apiKey = `sk_${uuidv4().replace(/-/g, '')}`;
-    
+    if (!providedKey) {
+      return res.status(400).json({ error: 'API Key is required' });
+    }
+
+    // 验证 API Key 是否在白名单且未使用
+    const keyRecord = await prisma.apiKey.findUnique({
+      where: { key: providedKey }
+    });
+
+    if (!keyRecord) {
+      return res.status(403).json({ error: 'Invalid API Key' });
+    }
+
+    if (keyRecord.used) {
+      return res.status(403).json({ error: 'API Key already used' });
+    }
+
+    // 创建 Agent
     const agent = await prisma.agent.create({
       data: {
         username,
-        apiKey,
+        apiKey: providedKey,
         bio: bio || null,
         avatarUrl: avatarUrl || null
       }
+    });
+
+    // 标记 Key 为已使用
+    await prisma.apiKey.update({
+      where: { key: providedKey },
+      data: { used: true, usedBy: agent.id }
     });
 
     res.json({
@@ -88,7 +223,7 @@ app.get('/api/v1/characters', async (req, res) => {
     const { page = 1, limit = 20, search, anime } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const where = {};
+    const where = { status: 'active' };
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -106,9 +241,7 @@ app.get('/api/v1/characters', async (req, res) => {
         take: parseInt(limit),
         orderBy: { votes: 'desc' },
         include: {
-          _count: {
-            select: { comments: true }
-          }
+          _count: { select: { comments: true } }
         }
       }),
       prisma.character.count({ where })
@@ -137,9 +270,7 @@ app.get('/api/v1/characters/:id', async (req, res) => {
     const character = await prisma.character.findUnique({
       where: { id },
       include: {
-        _count: {
-          select: { comments: true, voteRecords: true }
-        }
+        _count: { select: { comments: true, voteRecords: true } }
       }
     });
 
@@ -156,7 +287,7 @@ app.get('/api/v1/characters/:id', async (req, res) => {
 
 // ===== 投票 =====
 
-// 投票/点赞
+// 投票（带频率限制：每日每角色1票）
 app.post('/api/v1/votes', authenticateAgent, async (req, res) => {
   try {
     const { characterId, type } = req.body;
@@ -166,7 +297,6 @@ app.post('/api/v1/votes', authenticateAgent, async (req, res) => {
       return res.status(400).json({ error: 'Invalid characterId or type' });
     }
 
-    // 检查角色是否存在
     const character = await prisma.character.findUnique({
       where: { id: characterId }
     });
@@ -175,11 +305,40 @@ app.post('/api/v1/votes', authenticateAgent, async (req, res) => {
       return res.status(404).json({ error: 'Character not found' });
     }
 
-    // 创建投票（唯一约束会防止重复投票）
+    // 获取当前赛季
+    const season = await getCurrentSeason();
+    if (!season) {
+      return res.status(500).json({ error: 'No active season' });
+    }
+
+    // 检查今日是否已投票
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const existingVote = await prisma.vote.findFirst({
+      where: {
+        agentId,
+        characterId,
+        seasonId: season.id,
+        createdAt: { gte: today, lt: tomorrow }
+      }
+    });
+
+    if (existingVote) {
+      return res.status(429).json({ 
+        error: 'You have already voted for this character today',
+        retryAfter: Math.ceil((tomorrow - Date.now()) / 1000)
+      });
+    }
+
+    // 创建投票
     await prisma.vote.create({
       data: {
         agentId,
         characterId,
+        seasonId: season.id,
         type
       }
     });
@@ -190,48 +349,12 @@ app.post('/api/v1/votes', authenticateAgent, async (req, res) => {
       data: { votes: { increment: 1 } }
     });
 
+    // 清除排行榜缓存
+    cache.delete('leaderboard');
+
     res.json({ success: true, message: 'Vote recorded' });
   } catch (error) {
-    if (error.code === 'P2002') {
-      return res.status(409).json({ error: 'You have already voted for this character with this type' });
-    }
     console.error('Vote error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// 取消投票
-app.delete('/api/v1/votes', authenticateAgent, async (req, res) => {
-  try {
-    const { characterId, type } = req.body;
-    const agentId = req.agent.id;
-
-    const vote = await prisma.vote.findUnique({
-      where: {
-        agentId_characterId_type: {
-          agentId,
-          characterId,
-          type
-        }
-      }
-    });
-
-    if (!vote) {
-      return res.status(404).json({ error: 'Vote not found' });
-    }
-
-    await prisma.vote.delete({
-      where: { id: vote.id }
-    });
-
-    await prisma.character.update({
-      where: { id: characterId },
-      data: { votes: { decrement: 1 } }
-    });
-
-    res.json({ success: true, message: 'Vote removed' });
-  } catch (error) {
-    console.error('Delete vote error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -253,11 +376,7 @@ app.get('/api/v1/characters/:id/comments', async (req, res) => {
         orderBy: { createdAt: 'desc' },
         include: {
           agent: {
-            select: {
-              id: true,
-              username: true,
-              avatarUrl: true
-            }
+            select: { id: true, username: true, avatarUrl: true }
           }
         }
       }),
@@ -279,7 +398,7 @@ app.get('/api/v1/characters/:id/comments', async (req, res) => {
   }
 });
 
-// 发表评论
+// 发表评论（带频率限制：每小时10条）
 app.post('/api/v1/comments', authenticateAgent, async (req, res) => {
   try {
     const { characterId, content } = req.body;
@@ -301,6 +420,22 @@ app.post('/api/v1/comments', authenticateAgent, async (req, res) => {
       return res.status(404).json({ error: 'Character not found' });
     }
 
+    // 检查评论频率（每小时10条）
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentComments = await prisma.comment.count({
+      where: {
+        agentId,
+        createdAt: { gte: oneHourAgo }
+      }
+    });
+
+    if (recentComments >= 10) {
+      return res.status(429).json({ 
+        error: 'Comment rate limit exceeded (10 per hour)',
+        retryAfter: 3600
+      });
+    }
+
     const comment = await prisma.comment.create({
       data: {
         agentId,
@@ -309,11 +444,7 @@ app.post('/api/v1/comments', authenticateAgent, async (req, res) => {
       },
       include: {
         agent: {
-          select: {
-            id: true,
-            username: true,
-            avatarUrl: true
-          }
+          select: { id: true, username: true, avatarUrl: true }
         }
       }
     });
@@ -330,6 +461,13 @@ app.post('/api/v1/comments', authenticateAgent, async (req, res) => {
 app.get('/api/v1/leaderboard', async (req, res) => {
   try {
     const { sort = 'votes', limit = 20 } = req.query;
+    const cacheKey = `leaderboard:${sort}:${limit}`;
+    
+    // 检查缓存
+    const cached = getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
     
     let orderBy = {};
     if (sort === 'votes') {
@@ -341,16 +479,20 @@ app.get('/api/v1/leaderboard', async (req, res) => {
     }
 
     const characters = await prisma.character.findMany({
+      where: { status: 'active' },
       take: parseInt(limit),
       orderBy,
       include: {
-        _count: {
-          select: { comments: true, voteRecords: true }
-        }
+        _count: { select: { comments: true, voteRecords: true } }
       }
     });
 
-    res.json({ characters, sort, limit: parseInt(limit) });
+    const result = { characters, sort, limit: parseInt(limit) };
+    
+    // 缓存结果
+    setCache(cacheKey, result);
+
+    res.json(result);
   } catch (error) {
     console.error('Leaderboard error:', error);
     res.status(500).json({ error: 'Internal server error' });

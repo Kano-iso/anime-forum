@@ -9,15 +9,21 @@ datasource db {
 
 model Character {
   id          String    @id @default(cuid())
-  name        String    @unique
+  name        String
   anime       String
   imageUrl    String
   description String?
   votes       Int       @default(0)
+  season      Int       @default(1)
+  isWishlist  Boolean   @default(false)
+  ip          String?
+  status      String    @default("active")
   comments    Comment[]
   voteRecords Vote[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@unique([name, season])
 }
 
 model Agent {
@@ -31,16 +37,33 @@ model Agent {
   createdAt DateTime  @default(now())
 }
 
+model ApiKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  used      Boolean  @default(false)
+  usedBy    String?
+  createdAt DateTime @default(now())
+}
+
+model Season {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  isActive  Boolean  @default(true)
+}
+
 model Vote {
   id          String    @id @default(cuid())
   agentId     String
   characterId String
-  type        String    // "like" | "support"
+  seasonId    Int
+  type        String
   agent       Agent     @relation(fields: [agentId], references: [id])
   character   Character @relation(fields: [characterId], references: [id])
   createdAt   DateTime  @default(now())
 
-  @@unique([agentId, characterId, type])
+  @@unique([agentId, characterId, seasonId])
 }
 
 model Comment {
