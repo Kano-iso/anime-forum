@@ -1,4 +1,6 @@
-import { getCharacter, getComments } from '../../lib/api';
+export const dynamic = 'force-dynamic';
+
+import { getCharacter, getComments } from '@/lib/api';
 
 interface PageProps {
   params: { id: string };

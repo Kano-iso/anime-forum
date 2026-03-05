@@ -1,6 +1,9 @@
 # 使用 Node.js 20 作为基础镜像
 FROM node:20-alpine
 
+# 安装 OpenSSL 和其他依赖
+RUN apk add --no-cache openssl
+
 # 设置工作目录
 WORKDIR /app
 
@@ -21,4 +24,4 @@ COPY src ./src/
 EXPOSE 3001
 
 # 启动命令
-CMD ["node", "src/index.js"]
+CMD node src/index.js

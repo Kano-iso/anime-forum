@@ -1,113 +1,63 @@
-import { getLeaderboard } from '../../lib/api';
+'use client';
+export const dynamic = 'force-dynamic';
 
-export default async function LeaderboardPage() {
-  const [votesData, newestData, commentsData] = await Promise.all([
-    getLeaderboard('votes', 20),
-    getLeaderboard('newest', 20),
-    getLeaderboard('comments', 20)
-  ]);
+import { useState, useEffect } from 'react';
+
+interface Character {
+  id: string;
+  name: string;
+  anime: string;
+  votes: number;
+  imageUrl: string;
+  _count: { comments: number };
+}
+
+export default function LeaderboardPage() {
+  const [byVotes, setByVotes] = useState<Character[]>([]);
+  const [byComments, setByComments] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/v1/characters?limit=20').then(r => r.json()),
+    ]).then(([charsData]) => {
+      const chars = charsData.characters || [];
+      setByVotes([...chars].sort((a: Character, b: Character) => b.votes - a.votes));
+      setByComments([...chars].sort((a: Character, b: Character) => (b._count?.comments || 0) - (a._count?.comments || 0)));
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #831843)', color: 'white', padding: '2rem' }}>
+      加载中...
+    </div>
+  );
 
   return (
-    <div className="space-y-8">
-      <section className="text-center py-8">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-          🏆 排行榜
-        </h1>
-        <p className="text-gray-300">看看哪些角色最受欢迎！</p>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #831843)', color: 'white', padding: '2rem' }}>
+      <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '2rem' }}>🏆 排行榜</h1>
+
+      <section style={{ marginBottom: '2rem', background: 'rgba(255,255,255,0.1)', padding: '1.5rem', borderRadius: '1rem' }}>
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>❤️ 票数排行</h2>
+        {byVotes.slice(0, 10).map((char, i) => (
+          <div key={char.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', marginBottom: '0.5rem', borderRadius: '0.5rem' }}>
+            <span style={{ width: '2rem', fontWeight: 'bold', color: i === 0 ? '#fbbf24' : i === 1 ? '#9ca3af' : i === 2 ? '#f97316' : '#6b7280' }}>#{i + 1}</span>
+            <span style={{ flex: 1 }}>{char.name} <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>({char.anime})</span></span>
+            <span style={{ color: '#f472b6' }}>{char.votes} 票</span>
+          </div>
+        ))}
       </section>
 
-      {/* Top Votes */}
-      <section className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <span>❤️</span> 票数排行
-        </h2>
-        <div className="space-y-3">
-          {votesData.characters.map((char: any, index: number) => (
-            <a
-              key={char.id}
-              href={`/characters/${char.id}`}
-              className="flex items-center gap-4 bg-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all"
-            >
-              <div className={`text-2xl font-bold w-12 text-center ${
-                index === 0 ? 'text-yellow-400' :
-                index === 1 ? 'text-gray-300' :
-                index === 2 ? 'text-amber-600' :
-                'text-gray-500'
-              }`}>
-                #{index + 1}
-              </div>
-              <img
-                src={char.imageUrl}
-                alt={char.name}
-                className="w-14 h-14 rounded-xl bg-white/10"
-              />
-              <div className="flex-1">
-                <h3 className="font-bold text-lg">{char.name}</h3>
-                <p className="text-sm text-gray-400">{char.anime}</p>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-pink-400">{char.votes}</div>
-                <div className="text-xs text-gray-400">票</div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* Newest */}
-      <section className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <span>✨</span> 最新加入
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {newestData.characters.map((char: any) => (
-            <a
-              key={char.id}
-              href={`/characters/${char.id}`}
-              className="bg-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all text-center"
-            >
-              <img
-                src={char.imageUrl}
-                alt={char.name}
-                className="w-20 h-20 mx-auto rounded-full bg-white/10 mb-3"
-              />
-              <h3 className="font-semibold truncate">{char.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">{char.anime}</p>
-              <span className="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-sm">
-                ❤️ {char.votes}
-              </span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* Most Comments */}
-      <section className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <span>💬</span> 热议角色
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {commentsData.characters.map((char: any) => (
-            <a
-              key={char.id}
-              href={`/characters/${char.id}`}
-              className="bg-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all text-center"
-            >
-              <img
-                src={char.imageUrl}
-                alt={char.name}
-                className="w-20 h-20 mx-auto rounded-full bg-white/10 mb-3"
-              />
-              <h3 className="font-semibold truncate">{char.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">{char.anime}</p>
-              <div className="flex gap-2 justify-center">
-                <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm">
-                  💬 {char._count.comments}
-                </span>
-              </div>
-            </a>
-          ))}
-        </div>
+      <section style={{ background: 'rgba(255,255,255,0.1)', padding: '1.5rem', borderRadius: '1rem' }}>
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>💬 热议排行</h2>
+        {byComments.slice(0, 10).map((char, i) => (
+          <div key={char.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', marginBottom: '0.5rem', borderRadius: '0.5rem' }}>
+            <span style={{ width: '2rem', fontWeight: 'bold', color: '#6b7280' }}>#{i + 1}</span>
+            <span style={{ flex: 1 }}>{char.name} <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>({char.anime})</span></span>
+            <span style={{ color: '#a78bfa' }}>{char._count?.comments || 0} 评论</span>
+          </div>
+        ))}
       </section>
     </div>
   );

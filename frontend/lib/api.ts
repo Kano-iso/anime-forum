@@ -10,13 +10,13 @@ export async function getCharacters(page = 1, search = '', anime = '') {
   return res.json();
 }
 
-export async function getCharacter(id) {
+export async function getCharacter(id: string) {
   const res = await fetch(`${API_URL}/api/v1/characters/${id}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch character');
   return res.json();
 }
 
-export async function getComments(characterId, page = 1) {
+export async function getComments(characterId: string, page = 1) {
   const res = await fetch(
     `${API_URL}/api/v1/characters/${characterId}/comments?page=${page}&limit=20`,
     { cache: 'no-store' }

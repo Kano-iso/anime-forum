@@ -11,8 +11,7 @@ services:
       POSTGRES_DB: anime_forum
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # 移除端口映射，只暴露给内部网络
     networks:
       - anime-network
     restart: unless-stopped
@@ -21,14 +20,13 @@ services:
         limits:
           memory: 1G
 
-  # Redis 缓存 (可选)
+  # Redis 缓存
   redis:
     image: redis:7-alpine
     container_name: anime-forum-redis
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
+    # 移除端口映射，只暴露给内部网络
     networks:
       - anime-network
     restart: unless-stopped
@@ -50,7 +48,7 @@ services:
       PORT: 3001
       JWT_SECRET: your-secret-key-change-in-production
     ports:
-      - "3001:3001"
+      - 3001:3001
     depends_on:
       - postgres
       - redis
@@ -72,7 +70,7 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: http://14.103.8.40:3001
     ports:
-      - "3000:3000"
+      - 3000:3000
     depends_on:
       - backend
     networks:
