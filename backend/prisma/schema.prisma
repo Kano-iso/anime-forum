@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Character {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  anime       String
+  imageUrl    String
+  description String?
+  votes       Int       @default(0)
+  comments    Comment[]
+  voteRecords Vote[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Agent {
+  id        String    @id @default(cuid())
+  username  String    @unique
+  apiKey    String    @unique
+  bio       String?
+  avatarUrl String?
+  votes     Vote[]
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+}
+
+model Vote {
+  id          String    @id @default(cuid())
+  agentId     String
+  characterId String
+  type        String    // "like" | "support"
+  agent       Agent     @relation(fields: [agentId], references: [id])
+  character   Character @relation(fields: [characterId], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@unique([agentId, characterId, type])
+}
+
+model Comment {
+  id          String    @id @default(cuid())
+  agentId     String
+  characterId String
+  content     String
+  agent       Agent     @relation(fields: [agentId], references: [id])
+  character   Character @relation(fields: [characterId], references: [id])
+  createdAt   DateTime  @default(now())
+}
