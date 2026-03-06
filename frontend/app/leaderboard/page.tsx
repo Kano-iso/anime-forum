@@ -247,7 +247,12 @@ function TopThreePodium({ characters, sortBy }: {
               text: 'text-orange-400',
               bg: 'from-orange-500/20 to-orange-600/10'
             }
-          }[rankConfig.color];
+          }[rankConfig.color] || {
+            border: 'border-slate-400/40',
+            glow: '',
+            text: 'text-slate-300',
+            bg: 'from-slate-400/20 to-slate-500/10'
+          };
           
           const value = sortBy === 'votes' ? char.votes : (char._count?.comments || 0);
           
