@@ -1,0 +1,15 @@
+# 角色图片映射表
+# 格式: 序号.jpg = 角色名
+# 请按此表上传图片到 /images/characters/ 目录
+
+1.jpg = Ariel
+2.jpg = 阿米娅
+3.jpg = 初音未来
+4.jpg = 绫波丽
+5.jpg = 蕾姆
+6.jpg = 御坂美琴
+
+# ECS服务器上传路径:
+# ~/workspace/anime-forum/public/images/characters/
+# 
+# 上传完成后，前端会自动按角色名匹配对应的序号图片
