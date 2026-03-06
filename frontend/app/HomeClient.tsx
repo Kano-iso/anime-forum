@@ -147,9 +147,9 @@ function TopThreePodium({ characters }: { characters: Character[] }) {
   if (characters.length === 0) return null;
   
   return (
-    <div className="flex justify-center items-start gap-1 md:gap-2 pt-2">
+    <div className="flex justify-center items-end gap-2 md:gap-2 pt-2">
       {characters[1] && (
-        <div className="w-56 md:w-72 flex flex-col items-center">
+        <div className="w-52 md:w-68 flex flex-col items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -158,7 +158,7 @@ function TopThreePodium({ characters }: { characters: Character[] }) {
           >
             <div className="text-center text-4xl md:text-5xl mb-2">🥈</div>
             <div className="bg-card border-2 border-slate-400/50 border-glow-silver rounded-3xl p-5 text-center">
-              <div className="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-3">
+              <div className="relative w-28 h-28 md:w-36 md:h-36 mx-auto mb-3">
                 <Image src={characters[1].avatarUrl} alt={characters[1].name} fill className="rounded-full object-cover border-4 border-slate-400 shadow-lg" />
               </div>
               <div className="text-lg font-bold text-white mb-1">{characters[1].name}</div>
@@ -170,7 +170,7 @@ function TopThreePodium({ characters }: { characters: Character[] }) {
       )}
 
       {characters[0] && (
-        <div className="w-64 md:w-80 flex flex-col items-center -mt-8 md:-mt-12">
+        <div className="w-64 md:w-80 flex flex-col items-center -mt-12 md:-mt-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -191,7 +191,7 @@ function TopThreePodium({ characters }: { characters: Character[] }) {
       )}
 
       {characters[2] && (
-        <div className="w-44 md:w-60 flex flex-col items-center">
+        <div className="w-48 md:w-56 flex flex-col items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -200,7 +200,7 @@ function TopThreePodium({ characters }: { characters: Character[] }) {
           >
             <div className="text-center text-2xl md:text-3xl mb-1">🥉</div>
             <div className="bg-card border-2 border-orange-500/50 border-glow-bronze rounded-3xl p-3 text-center">
-              <div className="relative w-20 h-20 md:w-28 md:h-28 mx-auto mb-2">
+              <div className="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-2">
                 <Image src={characters[2].avatarUrl} alt={characters[2].name} fill className="rounded-full object-cover border-3 border-orange-500" />
               </div>
               <div className="text-base font-bold text-white">{characters[2].name}</div>
