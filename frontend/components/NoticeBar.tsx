@@ -3,6 +3,24 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
+// 角色图片映射配置
+const CHARACTER_IMAGE_MAP: Record<string, string> = {
+  'Ariel': '1.jpg',
+  '阿米娅': '2.jpg',
+  '初音未来': '3.jpg',
+  '绫波丽': '4.jpg',
+  '蕾姆': '5.jpg',
+  '御坂美琴': '6.jpg',
+};
+
+function getCharacterImageUrl(characterName: string): string {
+  const imageName = CHARACTER_IMAGE_MAP[characterName];
+  if (imageName) {
+    return `/images/characters/${imageName}`;
+  }
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(characterName)}`;
+}
+
 interface NoticeBarProps {
   champion?: {
     name: string;
@@ -24,9 +42,9 @@ const NOTICES = [
 export default function NoticeBar({ champion }: NoticeBarProps) {
   const defaultChampion = {
     name: 'Ariel',
-    votes: 123,
+    votes: 3,
     anime: 'Original',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ariel'
+    avatarUrl: getCharacterImageUrl('Ariel')
   };
 
   const currentChampion = champion || defaultChampion;
