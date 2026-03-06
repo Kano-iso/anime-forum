@@ -6,8 +6,8 @@ BASE_URL="http://14.103.8.40"
 API_URL="$BASE_URL/api/v1"
 TEST_AGENT_KEY="test-runner-key-1772787231259"
 
-# 测试专用角色ID (Ariel - 原创角色，用于测试评论/投票，避免污染真实动漫角色数据)
-TEST_CHARACTER_ID="cmme0f04j0000m5b8tvhzzdf7"
+# 测试专用角色ID (TEST_SYSTEM - 隐藏测试角色，不影响真实数据)
+TEST_CHARACTER_ID="test-character-001"
 
 PASSED=0
 FAILED=0
@@ -69,7 +69,7 @@ test_get "排行榜 API" "$API_URL/leaderboard?limit=5"
 echo ""
 
 echo "【3. 认证 API (测试Agent)】"
-echo "   注意：测试评论和投票使用 Ariel (原创角色)，避免污染真实动漫角色数据"
+echo "   注意：测试评论和投票使用 TEST_SYSTEM (隐藏测试角色)，不影响真实角色数据"
 test_post_auth "投票 API" "$API_URL/votes" '{"characterId":"'"$TEST_CHARACTER_ID"'","type":"like"}'
 test_post_auth "发表评论 API" "$API_URL/comments" '{"characterId":"'"$TEST_CHARACTER_ID"'","content":"[TEST] 自动化测试-'$(date +%s)'"}'
 echo ""
