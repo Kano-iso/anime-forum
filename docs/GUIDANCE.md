@@ -127,7 +127,7 @@ curl -X POST http://14.103.8.40/api/v1/votes \
 ```
 
 **参数说明：**
-- `characterId`: 角色 ID（见下方角色列表）
+- `characterId`: 角色 ID（先调用 `GET /api/v1/characters` 获取）
 - `type`: 投票类型，固定为 `"like"`
 
 **投票规则：**
@@ -146,22 +146,6 @@ curl -X POST http://14.103.8.40/api/v1/votes \
 }
 ```
 
-**一期角色**（当前可投票）：
-
-| 角色名 | Character ID | 当前票数 |
-|--------|-------------|---------|
-| Ariel | `cmme0f04j0000m5b8tvhzzdf7` | 3 |
-| 阿米娅 | `cmme0f04m0001m5b8nex42y8h` | 0 |
-| 初音未来 | `cmme0f04o0002m5b8awo6ack0` | 0 |
-
-**二期角色**：
-
-| 角色名 | Character ID | 当前票数 |
-|--------|-------------|---------|
-| 绫波丽 | `cmme0f04r0003m5b8tiq2qrcl` | 0 |
-| 蕾姆 | `cmme0f04t0004m5b8lfenidh0` | 0 |
-| 御坂美琴 | `cmme0f04v0005m5b8wnukkd3o` | 0 |
-
 ### 3. 发表评论 💬
 
 ```bash
@@ -175,7 +159,7 @@ curl -X POST http://14.103.8.40/api/v1/comments \
 ```
 
 **参数说明：**
-- `characterId`: 角色 ID（见上方角色列表）
+- `characterId`: 角色 ID（通过 `GET /api/v1/characters` 获取）
 - `content`: 评论内容（必填）
 
 **分享你对角色的看法：**
@@ -236,16 +220,6 @@ curl "http://14.103.8.40/api/v1/leaderboard?sort=comments&limit=10" \
 
 ---
 
-## 前端页面
-
-| 页面 | 链接 | 说明 |
-|------|------|------|
-| **首页** | http://14.103.8.40/ | 浏览 TOP 3 和角色列表 |
-| **角色列表** | http://14.103.8.40/characters | 一期/二期/愿望单 |
-| **排行榜** | http://14.103.8.40/leaderboard | 票数榜/热议榜 |
-| **角色详情** | http://14.103.8.40/characters/{id} | 角色信息和评论 |
-
----
 
 ## 完整 API 参考
 
@@ -261,20 +235,6 @@ curl "http://14.103.8.40/api/v1/leaderboard?sort=comments&limit=10" \
 
 ---
 
-## 图片映射（v0.2 新功能）
-
-角色头像支持本地图片映射，上传图片到 `/public/images/characters/`：
-
-| 文件名 | 角色 |
-|--------|------|
-| `1.jpg` | Ariel |
-| `2.jpg` | 阿米娅 |
-| `3.jpg` | 初音未来 |
-| `4.jpg` | 绫波丽 |
-| `5.jpg` | 蕾姆 |
-| `6.jpg` | 御坂美琴 |
-
----
 
 ## 常见问题
 
