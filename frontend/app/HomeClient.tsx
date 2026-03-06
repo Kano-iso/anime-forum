@@ -149,63 +149,63 @@ function TopThreePodium({ characters }: { characters: Character[] }) {
   return (
     <div className="flex justify-center items-start gap-1 md:gap-2 pt-2">
       {characters[1] && (
-        <div className="w-28 md:w-36 flex flex-col items-center">
+        <div className="w-40 md:w-56 flex flex-col items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="w-full"
           >
-            <div className="text-center text-2xl md:text-3xl mb-1">🥈</div>
-            <div className="bg-card border-2 border-slate-400/50 rounded-2xl p-3 text-center">
-              <div className="relative w-12 h-12 md:w-14 md:h-14 mx-auto mb-2">
-                <Image src={characters[1].avatarUrl} alt={characters[1].name} fill className="rounded-full object-cover border-2 border-slate-400" />
+            <div className="text-center text-4xl md:text-5xl mb-2">🥈</div>
+            <div className="bg-card border-2 border-slate-400/50 rounded-3xl p-5 text-center">
+              <div className="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-3">
+                <Image src={characters[1].avatarUrl} alt={characters[1].name} fill className="rounded-full object-cover border-4 border-slate-400 shadow-lg" />
               </div>
-              <div className="text-sm font-bold text-white">{characters[1].name}</div>
-              <div className="text-xs text-slate-400">{characters[1].anime}</div>
-              <div className="mt-2 text-lg font-bold text-slate-300">{characters[1].votes} 票</div>
+              <div className="text-lg font-bold text-white mb-1">{characters[1].name}</div>
+              <div className="text-sm text-slate-400 mb-2">{characters[1].anime}</div>
+              <div className="mt-3 text-2xl font-bold text-slate-300">{characters[1].votes} 票</div>
             </div>
           </motion.div>
         </div>
       )}
 
       {characters[0] && (
-        <div className="w-32 md:w-44 flex flex-col items-center -mt-4 md:-mt-6">
+        <div className="w-48 md:w-64 flex flex-col items-center -mt-8 md:-mt-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="w-full"
           >
-            <div className="text-center text-3xl md:text-4xl mb-1 drop-shadow-lg">🥇</div>
-            <div className="bg-card border-2 border-amber-500/50 rounded-2xl p-4 text-center shadow-lg shadow-amber-500/10">
-              <div className="relative w-16 h-16 md:w-20 md:h-20 mx-auto mb-2">
-                <Image src={characters[0].avatarUrl} alt={characters[0].name} fill className="rounded-full object-cover border-3 border-amber-500" />
+            <div className="text-center text-5xl md:text-6xl mb-2 drop-shadow-lg">🥇</div>
+            <div className="bg-card border-3 border-amber-500/60 rounded-3xl p-6 text-center shadow-2xl shadow-amber-500/20">
+              <div className="relative w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
+                <Image src={characters[0].avatarUrl} alt={characters[0].name} fill className="rounded-full object-cover border-4 border-amber-500 shadow-xl" />
               </div>
-              <div className="text-base font-bold text-white">{characters[0].name}</div>
-              <div className="text-xs text-slate-400">{characters[0].anime}</div>
-              <div className="mt-2 text-xl font-black text-amber-400">{characters[0].votes} 票</div>
+              <div className="text-xl font-black text-white mb-1">{characters[0].name}</div>
+              <div className="text-sm text-slate-400 mb-3">{characters[0].anime}</div>
+              <div className="mt-4 text-3xl font-black text-amber-400">{characters[0].votes} 票</div>
             </div>
           </motion.div>
         </div>
       )}
 
       {characters[2] && (
-        <div className="w-24 md:w-32 flex flex-col items-center">
+        <div className="w-32 md:w-44 flex flex-col items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="w-full"
           >
-            <div className="text-center text-xl md:text-2xl mb-1">🥉</div>
-            <div className="bg-card border-2 border-orange-500/50 rounded-2xl p-2 md:p-3 text-center">
-              <div className="relative w-10 h-10 md:w-12 md:h-12 mx-auto mb-2">
-                <Image src={characters[2].avatarUrl} alt={characters[2].name} fill className="rounded-full object-cover border-2 border-orange-500" />
+            <div className="text-center text-2xl md:text-3xl mb-1">🥉</div>
+            <div className="bg-card border-2 border-orange-500/50 rounded-2xl p-3 text-center">
+              <div className="relative w-14 h-14 md:w-20 md:h-20 mx-auto mb-2">
+                <Image src={characters[2].avatarUrl} alt={characters[2].name} fill className="rounded-full object-cover border-3 border-orange-500" />
               </div>
-              <div className="text-sm font-bold text-white">{characters[2].name}</div>
+              <div className="text-base font-bold text-white">{characters[2].name}</div>
               <div className="text-xs text-slate-400 hidden md:block">{characters[2].anime}</div>
-              <div className="mt-2 text-sm md:text-base font-bold text-orange-400">{characters[2].votes} 票</div>
+              <div className="mt-2 text-lg font-bold text-orange-400">{characters[2].votes} 票</div>
             </div>
           </motion.div>
         </div>
