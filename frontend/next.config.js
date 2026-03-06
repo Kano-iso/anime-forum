@@ -10,14 +10,11 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
   },
   async rewrites() {
-    // 本地开发使用 ECS 后端，生产环境使用 backend 服务名
-    const isDev = process.env.NODE_ENV === 'development';
+    // API 代理配置 - 指向本机后端服务
     return [
       {
         source: '/api/:path*',
-        destination: isDev 
-          ? 'http://14.103.8.40/api/:path*'  // 本地开发指向 ECS
-          : 'http://backend:3001/api/:path*', // Docker 生产环境
+        destination: 'http://127.0.0.1:3001/api/:path*',
       },
     ];
   },
