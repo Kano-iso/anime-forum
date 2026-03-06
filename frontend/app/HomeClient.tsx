@@ -223,9 +223,9 @@ function CharacterCard({ character, index }: { character: Character; index: numb
     >
       <Link href={`/characters/${character.id}`}>
         <div className="group relative bg-card rounded-2xl border border-slate-700/50 overflow-hidden hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10 transition-all">
-          <div className="relative h-36 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+          <div className="relative h-64 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-22 h-22">
+              <div className="relative w-40 h-40">
                 <Image
                   src={character.avatarUrl}
                   alt={character.name}

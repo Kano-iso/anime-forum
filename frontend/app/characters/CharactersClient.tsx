@@ -188,11 +188,12 @@ function CharacterCard({ character, index }: { character: Character; index: numb
           <div className="relative h-32 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative w-20 h-20">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-800/50 to-transparent backdrop-blur-sm"></div>
                 <Image
                   src={character.avatarUrl}
                   alt={character.name}
                   fill
-                  className="rounded-full object-cover border-3 border-slate-700 group-hover:border-blue-500/50 transition-all"
+                  className="rounded-xl object-cover border-3 border-slate-700 group-hover:border-blue-500/50 transition-all"
                 />
               </div>
             </div>

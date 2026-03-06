@@ -57,8 +57,8 @@ export default function CharacterDetailClient({
             <div className="h-32 bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-slate-900/50"></div>
             
             <div className="px-6 pb-6">
-              <div className="flex flex-col items-center -mt-16 mb-4">
-                <div className="relative w-24 h-24 mb-3">
+              <div className="flex flex-col items-center -mt-32 mb-4">
+                <div className="relative w-48 h-48 mb-3">
                   <Image
                     src={character.avatarUrl}
                     alt={character.name}
