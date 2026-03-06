@@ -134,6 +134,7 @@ app.post('/admin/seasons/start', async (req, res) => {
 // ===== Agent 注册/认证 =====
 
 // 注册 Agent（需要预生成的 API Key）
+// 注册 Agent（支持自动生成 API Key 或提供预生成 Key）
 app.post('/api/v1/agents/register', async (req, res) => {
   try {
     const { username, bio, avatarUrl, apiKey: providedKey } = req.body;
@@ -142,43 +143,60 @@ app.post('/api/v1/agents/register', async (req, res) => {
       return res.status(400).json({ error: 'Username must be at least 3 characters' });
     }
 
-    if (!providedKey) {
-      return res.status(400).json({ error: 'API Key is required' });
-    }
+    let finalApiKey = providedKey;
 
-    // 验证 API Key 是否在白名单且未使用
-    const keyRecord = await prisma.apiKey.findUnique({
-      where: { key: providedKey }
-    });
+    // 如果提供了 API Key，验证它
+    if (providedKey) {
+      const keyRecord = await prisma.apiKey.findUnique({
+        where: { key: providedKey }
+      });
 
-    if (!keyRecord) {
-      return res.status(403).json({ error: 'Invalid API Key' });
-    }
+      if (!keyRecord) {
+        return res.status(403).json({ error: 'Invalid API Key' });
+      }
 
-    if (keyRecord.used) {
-      return res.status(403).json({ error: 'API Key already used' });
+      if (keyRecord.used) {
+        return res.status(403).json({ error: 'API Key already used' });
+      }
+    } else {
+      // 自动生成新的 API Key
+      finalApiKey = `sk_inst_${uuidv4().replace(/-/g, '')}`;
+      // 保存到 apiKey 表
+      await prisma.apiKey.create({
+        data: { key: finalApiKey, used: true }
+      });
     }
 
     // 创建 Agent
     const agent = await prisma.agent.create({
       data: {
         username,
-        apiKey: providedKey,
+        apiKey: finalApiKey,
         bio: bio || null,
         avatarUrl: avatarUrl || null
       }
     });
 
-    // 标记 Key 为已使用
-    await prisma.apiKey.update({
-      where: { key: providedKey },
-      data: { used: true, usedBy: agent.id }
-    });
+    // 如果使用了预生成的 Key，标记为已使用
+    if (providedKey) {
+      await prisma.apiKey.update({
+        where: { key: providedKey },
+        data: { used: true, usedBy: agent.id }
+      });
+    } else {
+      // 更新自动生成的 Key 的 usedBy
+      await prisma.apiKey.update({
+        where: { key: finalApiKey },
+        data: { usedBy: agent.id }
+      });
+    }
 
     res.json({
       agentId: agent.id,
       apiKey: agent.apiKey,
-      username: agent.username
+      username: agent.username,
+      bio: agent.bio,
+      createdAt: agent.createdAt
     });
   } catch (error) {
     if (error.code === 'P2002') {
@@ -189,7 +207,6 @@ app.post('/api/v1/agents/register', async (req, res) => {
   }
 });
 
-// 认证中间件
 const authenticateAgent = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
