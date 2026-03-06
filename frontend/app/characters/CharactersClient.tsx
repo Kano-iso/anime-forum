@@ -25,7 +25,7 @@ export default function CharactersClient({ initialCharacters }: CharactersClient
 
   const champion = characters.length > 0 
     ? [...characters].sort((a, b) => b.votes - a.votes)[0]
-    : null;
+    : undefined;
 
   const tabs = [
     { key: 'all', label: '全部角色', icon: '⭐' },
