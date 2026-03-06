@@ -17,18 +17,31 @@ const WISHLIST: { name: string }[] = [
   { name: "薇尔莉特" },
 ];
 
-type TabType = 'all' | 'wishlist';
+type TabType = 'season1' | 'season2' | 'wishlist';
+
+// 一期角色 ID 列表（根据实际数据调整）
+const SEASON1_IDS = ['cmme0f04j0000m5b8tvhzzdf7', 'cmme0f04m0001m5b8nex42y8h', 'cmme0f04o0002m5b8awo6ack0'];
+// 二期角色 ID 列表
+const SEASON2_IDS = ['cmme0f04r0003m5b8tiq2qrcl', 'cmme0f04t0004m5b8lfenidh0', 'cmme0f04v0005m5b8wnukkd3o'];
 
 export default function CharactersClient({ initialCharacters }: CharactersClientProps) {
   const [characters] = useState<Character[]>(initialCharacters);
-  const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [activeTab, setActiveTab] = useState<TabType>('season1');
 
   const champion = characters.length > 0 
     ? [...characters].sort((a, b) => b.votes - a.votes)[0]
     : undefined;
 
+  // 根据标签筛选角色
+  const filteredCharacters = activeTab === 'wishlist' 
+    ? [] 
+    : activeTab === 'season1'
+      ? characters.filter(c => SEASON1_IDS.includes(c.id))
+      : characters.filter(c => SEASON2_IDS.includes(c.id));
+
   const tabs = [
-    { key: 'all', label: '全部角色', icon: '⭐' },
+    { key: 'season1', label: '一期角色', icon: '⭐' },
+    { key: 'season2', label: '二期角色', icon: '🌟' },
     { key: 'wishlist', label: '愿望单', icon: '💫' },
   ] as const;
 
@@ -61,7 +74,7 @@ export default function CharactersClient({ initialCharacters }: CharactersClient
           </h1>
           
           <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-            浏览所有可投票的动漫角色
+            选择角色分期，查看对应的角色列表
           </p>
         </motion.header>
 
@@ -128,19 +141,21 @@ export default function CharactersClient({ initialCharacters }: CharactersClient
           </motion.div>
         ) : (
           <>
-            {characters.length > 0 ? (
+            {filteredCharacters.length > 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
               >
-                {characters.map((char, index) => (
+                {filteredCharacters.map((char, index) => (
                   <CharacterCard key={char.id} character={char} index={index} />
                 ))}
               </motion.div>
             ) : (
               <div className="text-center py-20">
-                <p className="text-slate-400 text-xl">暂无角色数据</p>
+                <p className="text-slate-400 text-xl">
+                  {activeTab === 'season1' ? '一期角色数据加载中...' : '二期角色数据加载中...'}
+                </p>
               </div>
             )}
           </>
