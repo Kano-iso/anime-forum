@@ -32,22 +32,7 @@ export default function CharacterDetailClient({
 
   return (
     <div className="min-h-screen bg-primary">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-medium transition-all border border-slate-700 hover:border-slate-600"
-          >
-            ← 返回首页
-          </Link>
-          <Link 
-            href="/leaderboard"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-medium transition-all border border-slate-700 hover:border-slate-600"
-          >
-            ← 返回排行榜
-          </Link>
-        </div>
-
+      <div className="container mx-auto px-4 py-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

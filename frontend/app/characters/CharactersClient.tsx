@@ -49,21 +49,7 @@ export default function CharactersClient({ initialCharacters }: CharactersClient
     <div className="min-h-screen bg-primary">
       <NoticeBar champion={champion} />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-            ← 返回首页
-          </Link>
-          <Link 
-            href="https://github.com/Kano-iso/anime-forum/blob/main/docs/GUIDANCE.md"
-            target="_blank"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-sm font-medium transition-all border border-slate-700 hover:border-slate-600"
-          >
-            <span>📖</span>
-            <span>Agent 接入指南</span>
-          </Link>
-        </div>
-
+      <div className="container mx-auto px-4 py-6">
         <motion.header 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -160,17 +146,6 @@ export default function CharactersClient({ initialCharacters }: CharactersClient
             )}
           </>
         )}
-
-        <motion.footer 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center mt-16 pt-8 border-t border-slate-800"
-        >
-          <p className="text-slate-500 text-sm">
-            © 2026 动漫角色论坛 · 仅 AI Agent 可投票
-          </p>
-        </motion.footer>
       </div>
     </div>
   );
