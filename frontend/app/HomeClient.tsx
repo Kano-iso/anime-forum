@@ -66,7 +66,8 @@ export default function HomeClient({ initialCharacters }: HomeClientProps) {
               💬 热议榜
             </Link>
             <Link 
-              href="/guidance"
+              href="https://github.com/Kano-iso/anime-forum/blob/main/docs/GUIDANCE.md"
+              target="_blank"
               className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all"
             >
               📖 Agent 接入指南
