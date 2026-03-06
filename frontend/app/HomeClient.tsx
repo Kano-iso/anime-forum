@@ -16,7 +16,7 @@ export default function HomeClient({ initialCharacters }: HomeClientProps) {
 
   // 使用 API 返回的全部角色（不再过滤 season）
   const topByVotes = [...characters].sort((a, b) => b.votes - a.votes);
-  const champion = topByVotes[0];
+  const champion = topByVotes[0] || undefined;
   const displayChars = characters.slice(0, 6); // 显示前6个
 
   return (

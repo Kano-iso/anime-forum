@@ -21,7 +21,7 @@ export default function LeaderboardClient({
 
   const champion = characters.length > 0 
     ? [...characters].sort((a, b) => b.votes - a.votes)[0]
-    : null;
+    : undefined;
 
   const sortedCharacters = [...characters].sort((a, b) => {
     if (sortBy === 'votes') return b.votes - a.votes;
