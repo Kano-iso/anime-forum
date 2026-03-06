@@ -106,6 +106,7 @@ export default function HomeClient({ initialCharacters }: HomeClientProps) {
           </div>
         )}
 
+        <motion.footer 
       </div>
     </div>
   );
