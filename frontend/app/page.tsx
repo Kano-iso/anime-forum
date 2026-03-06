@@ -1,114 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import NoticeBar from '@/components/NoticeBar';
+import { getCharacters, Character } from '@/lib/api';
 
-interface Character {
-  id: string;
-  name: string;
-  anime: string;
-  description: string;
-  avatarUrl: string;
-  votes: number;
-  _count: {
-    comments: number;
-    voteRecords: number;
-  };
-  season?: number;
-}
-
-const MOCK_CHARACTERS: Character[] = [
-  {
-    id: "1",
-    name: "Ariel",
-    anime: "Original",
-    description: "一个可爱的原创角色",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ariel",
-    votes: 123,
-    _count: { comments: 23, voteRecords: 123 },
-    season: 1
-  },
-  {
-    id: "2",
-    name: "阿米娅",
-    anime: "明日方舟",
-    description: "罗德岛的领袖，感染者之友",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=阿米娅",
-    votes: 98,
-    _count: { comments: 15, voteRecords: 98 },
-    season: 1
-  },
-  {
-    id: "3",
-    name: "初音未来",
-    anime: "Vocaloid",
-    description: "虚拟歌姬，全球知名的虚拟偶像",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=初音未来",
-    votes: 87,
-    _count: { comments: 19, voteRecords: 87 },
-    season: 1
-  },
-  {
-    id: "4",
-    name: "绫波丽",
-    anime: "EVA",
-    description: "EVA驾驶员，神秘的蓝色长发少女",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=绫波丽",
-    votes: 76,
-    _count: { comments: 12, voteRecords: 76 },
-    season: 1
-  },
-  {
-    id: "5",
-    name: "蕾姆",
-    anime: "Re:0",
-    description: "鬼族混血女仆，温柔体贴",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=蕾姆",
-    votes: 65,
-    _count: { comments: 18, voteRecords: 65 },
-    season: 2
-  },
-  {
-    id: "6",
-    name: "御坂美琴",
-    anime: "超电磁炮",
-    description: "学园都市Level 5超能力者",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=御坂美琴",
-    votes: 54,
-    _count: { comments: 11, voteRecords: 54 },
-    season: 2
-  },
-  {
-    id: "7",
-    name: "灶门炭治郎",
-    anime: "鬼灭之刃",
-    description: "使用水之呼吸的鬼杀队剑士",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=炭治郎",
-    votes: 48,
-    _count: { comments: 9, voteRecords: 48 },
-    season: 2
-  },
-  {
-    id: "8",
-    name: "毛利兰",
-    anime: "名侦探柯南",
-    description: "空手道高手，帝丹高中学生",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=毛利兰",
-    votes: 42,
-    _count: { comments: 7, voteRecords: 42 },
-    season: 2
-  }
-];
+// 使用真实 API 数据，不再使用 MOCK 数据
 
 export default function Home() {
-  const [characters] = useState<Character[]>(MOCK_CHARACTERS);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const season1Chars = characters.filter(c => c.season === 1);
-  const topByVotes = [...season1Chars].sort((a, b) => b.votes - a.votes);
+  useEffect(() => {
+    getCharacters(1, '', '')
+      .then(data => {
+        setCharacters(data.characters || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch characters:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  // 使用 API 返回的全部角色（不再过滤 season）
+  const topByVotes = [...characters].sort((a, b) => b.votes - a.votes);
   const champion = topByVotes[0];
+  const displayChars = characters.slice(0, 6); // 显示前6个
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-primary flex items-center justify-center">
+        <div className="text-white text-xl">加载中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-primary">
@@ -202,7 +130,7 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {season1Chars.map((char, index) => (
+            {displayChars.map((char, index) => (
               <CharacterCard key={char.id} character={char} index={index} />
             ))}
           </div>
