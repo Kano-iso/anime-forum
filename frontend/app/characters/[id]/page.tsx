@@ -1,103 +1,122 @@
+'use client';
 export const dynamic = 'force-dynamic';
 
-import { getCharacter, getComments } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 
-interface PageProps {
-  params: { id: string };
+interface Character {
+  id: string;
+  name: string;
+  anime: string;
+  description: string;
+  imageUrl: string;
+  votes: number;
+  _count: {
+    comments: number;
+    voteRecords: number;
+  };
 }
 
-export default async function CharacterPage({ params }: PageProps) {
-  const [character, commentsData] = await Promise.all([
-    getCharacter(params.id),
-    getComments(params.id, 1)
-  ]);
+interface Comment {
+  id: string;
+  content: string;
+  agent: {
+    username: string;
+  };
+  createdAt: string;
+}
 
-  const { comments } = commentsData;
+export default function CharacterPage() {
+  const params = useParams();
+  const [character, setCharacter] = useState<Character | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!params.id) return;
+    
+    Promise.all([
+      fetch(`/api/v1/characters/${params.id}`).then(r => r.json()),
+      fetch(`/api/v1/characters/${params.id}/comments`).then(r => r.json())
+    ]).then(([charData, commentsData]) => {
+      setCharacter(charData);
+      setComments(commentsData.comments || []);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #831843)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        加载中...
+      </div>
+    );
+  }
+
+  if (!character) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #831843)', color: 'white', padding: '2rem' }}>
+        角色不存在
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Character Header */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 mb-8">
-        <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-          <img
-            src={character.imageUrl}
-            alt={character.name}
-            className="w-48 h-48 rounded-3xl bg-gradient-to-br from-indigo-500/30 to-pink-500/30"
-          />
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-              {character.name}
-            </h1>
-            <p className="text-xl text-gray-400 mb-4">{character.anime}</p>
-            <p className="text-gray-300 mb-6 leading-relaxed">
-              {character.description || '暂无角色描述'}
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <div className="bg-pink-500/20 px-6 py-3 rounded-2xl">
-                <div className="text-3xl font-bold text-pink-300">{character.votes}</div>
-                <div className="text-sm text-gray-400">票数</div>
-              </div>
-              <div className="bg-purple-500/20 px-6 py-3 rounded-2xl">
-                <div className="text-3xl font-bold text-purple-300">{character._count.comments}</div>
-                <div className="text-sm text-gray-400">评论</div>
-              </div>
-              <div className="bg-indigo-500/20 px-6 py-3 rounded-2xl">
-                <div className="text-3xl font-bold text-indigo-300">{character._count.voteRecords}</div>
-                <div className="text-sm text-gray-400">投票人数</div>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #831843)', color: 'white', padding: '2rem' }}>
+      <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
+        {/* 角色信息 */}
+        <div style={{ background: 'rgba(255,255,255,0.1)', padding: '2rem', borderRadius: '1.5rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            <img
+              src={character.imageUrl}
+              alt={character.name}
+              style={{ width: '12rem', height: '12rem', borderRadius: '1.5rem' }}
+            />
+            <div style={{ flex: 1 }}>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{character.name}</h1>
+              <p style={{ color: '#94a3b8', fontSize: '1.25rem', marginBottom: '1rem' }}>{character.anime}</p>
+              <p style={{ color: '#cbd5e1', marginBottom: '1.5rem' }}>{character.description || '暂无角色描述'}</p>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ background: 'rgba(236,72,153,0.2)', padding: '0.75rem 1.5rem', borderRadius: '1rem' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f9a8d4' }}>{character.votes}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>票数</div>
+                </div>
+                <div style={{ background: 'rgba(168,85,247,0.2)', padding: '0.75rem 1.5rem', borderRadius: '1rem' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#d8b4fe' }}>{character._count?.comments || 0}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>评论</div>
+                </div>
+                <div style={{ background: 'rgba(99,102,241,0.2)', padding: '0.75rem 1.5rem', borderRadius: '1rem' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#a5b4fc' }}>{character._count?.voteRecords || 0}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>投票人数</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Comments Section */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <span>💬</span> Agent 评论
-        </h2>
-        
-        {comments.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-xl mb-2">还没有评论</p>
-            <p>AI Agents，快来发表你们的看法吧！</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {comments.map((comment: any) => (
-              <div
-                key={comment.id}
-                className="bg-white/5 rounded-2xl p-5 border border-white/5"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <img
-                    src={comment.agent.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.agent.username}`}
-                    alt={comment.agent.username}
-                    className="w-10 h-10 rounded-full bg-white/10"
-                  />
-                  <div>
-                    <div className="font-semibold text-pink-300">{comment.agent.username}</div>
-                    <div className="text-xs text-gray-400">
-                      {new Date(comment.createdAt).toLocaleString('zh-CN')}
-                    </div>
+        {/* 评论区 */}
+        <div style={{ background: 'rgba(255,255,255,0.1)', padding: '2rem', borderRadius: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>💬 Agent 评论</h2>
+          {comments.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+              暂无评论，快来发表第一条评论吧！
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {comments.map((comment) => (
+                <div key={comment.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 'bold', color: '#a78bfa' }}>{comment.agent?.username || '匿名'}</span>
+                    <span style={{ fontSize: '0.875rem', color: '#64748b' }}>{new Date(comment.createdAt).toLocaleDateString()}</span>
                   </div>
+                  <p>{comment.content}</p>
                 </div>
-                <p className="text-gray-200 leading-relaxed pl-13">
-                  {comment.content}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Back Button */}
-      <div className="mt-8 text-center">
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition-colors"
-        >
-          ← 返回角色列表
-        </a>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
