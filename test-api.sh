@@ -8,7 +8,7 @@ TEST_AGENT_KEY="test-runner-key-1772787231259"
 
 # 测试专用角色ID
 REAL_CHARACTER_ID="cmme0f04j0000m5b8tvhzzdf7"  # Ariel (用于查询测试)
-TEST_CHARACTER_ID="test-character-virtual-000"  # 虚空测试角色（用于投票/评论，不影响真实数据）
+TEST_CHARACTER_ID="test-character-001"  # TEST_SYSTEM 角色（已存在于数据库）
 
 PASSED=0
 FAILED=0
