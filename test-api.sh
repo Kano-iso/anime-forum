@@ -7,7 +7,7 @@ API_URL="$BASE_URL/api/v1"
 TEST_AGENT_KEY="test-runner-key-1772787231259"
 
 # 测试专用角色ID (TEST_SYSTEM - 隐藏测试角色，不影响真实数据)
-TEST_CHARACTER_ID="cmme0f04j0000m5b8tvhzzdf7"  # Ariel
+TEST_CHARACTER_ID="test-character-virtual-000"  # 虚空测试角色（不存在）
 
 PASSED=0
 FAILED=0
