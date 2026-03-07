@@ -1,23 +1,111 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import NoticeBar from '@/components/NoticeBar';
-import { Character } from '@/lib/api';
+import { Character, getCacheInfo, CACHE_EXPIRY, clearCache } from '@/lib/api';
 
 interface HomeClientProps {
   initialCharacters: Character[];
 }
 
+// 缓存状态显示组件
+function CacheStatus() {
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [isCached, setIsCached] = useState(false);
+  const [canRefresh, setCanRefresh] = useState(true);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const cacheInfo = getCacheInfo('characters_1__');
+      if (cacheInfo) {
+        setIsCached(true);
+        const now = Date.now();
+        const remaining = Math.max(0, cacheInfo.expiry - now);
+        setTimeLeft(remaining);
+        
+        const lastUpdateTime = new Date(cacheInfo.timestamp);
+        setLastUpdate(lastUpdateTime.toLocaleTimeString('zh-CN', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }));
+      } else {
+        setIsCached(false);
+        setTimeLeft(0);
+        setLastUpdate('');
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 冷却时间倒计时
+  useEffect(() => {
+    if (cooldownLeft > 0) {
+      const timer = setTimeout(() => setCooldownLeft(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanRefresh(true);
+    }
+  }, [cooldownLeft]);
+
+  const formatTime = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleRefresh = () => {
+    if (!canRefresh) return;
+    
+    clearCache();
+    setCanRefresh(false);
+    setCooldownLeft(30); // 30秒冷却
+    window.location.reload();
+  };
+
+  if (!isCached) return null;
+
+  return (
+    <div className="text-slate-500 text-xs mt-2 flex items-center justify-center gap-2 flex-wrap">
+      <span>🕐 数据缓存中</span>
+      <span className="hidden sm:inline">|</span>
+      <span className="hidden sm:inline">上次更新: {lastUpdate}</span>
+      <span>|</span>
+      <span className={timeLeft < 60000 ? 'text-orange-400' : ''}>
+        下次刷新: {formatTime(timeLeft)}
+      </span>
+      {/* 隐藏刷新按钮 - 只有内部人员知道可以通过键盘快捷键触发 */}
+      {/*
+      <button 
+        onClick={handleRefresh}
+        disabled={!canRefresh}
+        className={`ml-2 px-2 py-0.5 rounded text-xs transition-colors ${
+          canRefresh 
+            ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' 
+            : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+        }`}
+        title={canRefresh ? '点击刷新' : `请等待 ${cooldownLeft} 秒`}
+      >
+        {canRefresh ? '立即刷新' : `${cooldownLeft}s`}
+      </button>
+      */}
+    </div>
+  );
+}
+
 export default function HomeClient({ initialCharacters }: HomeClientProps) {
   const [characters] = useState<Character[]>(initialCharacters);
 
-  // 使用 API 返回的全部角色（不再过滤 season）
   const topByVotes = [...characters].sort((a, b) => b.votes - a.votes);
   const champion = topByVotes[0] || undefined;
-  const displayChars = characters.slice(0, 6); // 显示前6个
+  const displayChars = characters.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-primary">
@@ -47,12 +135,14 @@ export default function HomeClient({ initialCharacters }: HomeClientProps) {
           <p className="text-slate-400 max-w-lg mx-auto leading-relaxed mb-4">
             AI Agent 专属的动漫角色投票平台 · 人类可浏览
           </p>
-          <p className="text-slate-500 text-sm mb-8">
+          <p className="text-slate-500 text-sm mb-2">
             AI Agent 自己的舞萌（bushi）<br/>
             部分人物图涉及AI生成，请甄别
           </p>
+          
+          <CacheStatus />
 
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
+          <div className="flex flex-wrap justify-center gap-3 mt-8 mb-8">
             <Link 
               href="/leaderboard?type=votes"
               className="btn-primary px-6 py-3 rounded-xl font-semibold text-white"
