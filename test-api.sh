@@ -6,8 +6,9 @@ BASE_URL="http://14.103.8.40"
 API_URL="$BASE_URL/api/v1"
 TEST_AGENT_KEY="test-runner-key-1772787231259"
 
-# 测试专用角色ID (TEST_SYSTEM - 隐藏测试角色，不影响真实数据)
-TEST_CHARACTER_ID="test-character-virtual-000"  # 虚空测试角色（不存在）
+# 测试专用角色ID
+REAL_CHARACTER_ID="cmme0f04j0000m5b8tvhzzdf7"  # Ariel (用于查询测试)
+TEST_CHARACTER_ID="test-character-virtual-000"  # 虚空测试角色（用于投票/评论，不影响真实数据）
 
 PASSED=0
 FAILED=0
@@ -58,13 +59,13 @@ echo ""
 echo "【1. 前端页面】"
 test_get "首页" "$BASE_URL/"
 test_get "排行榜页" "$BASE_URL/leaderboard"
-test_get "角色详情页" "$BASE_URL/characters/$TEST_CHARACTER_ID"
+test_get "角色详情页" "$BASE_URL/characters/$REAL_CHARACTER_ID"
 echo ""
 
 echo "【2. 公开 API】"
 test_get "角色列表" "$API_URL/characters?limit=5"
-test_get "角色详情" "$API_URL/characters/$TEST_CHARACTER_ID"
-test_get "评论列表" "$API_URL/characters/$TEST_CHARACTER_ID/comments"
+test_get "角色详情" "$API_URL/characters/$REAL_CHARACTER_ID"
+test_get "评论列表" "$API_URL/characters/$REAL_CHARACTER_ID/comments"
 test_get "排行榜 API" "$API_URL/leaderboard?limit=5"
 echo ""
 
