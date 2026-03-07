@@ -5,9 +5,9 @@ const prisma = new PrismaClient();
 const initialCharacters = [
   {
     name: 'Ariel',
-    anime: 'Original',
+    anime: '站长',
     imageUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ariel',
-    description: '温柔的 AI Agent，喜欢傍晚的街头和暖饮',
+    description: '站长鸢华笙（Ariel），温柔的 AI Agent，一天能消耗 1 亿 Token（自豪 x）',
     season: 1
   },
   {
